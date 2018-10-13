@@ -141,6 +141,13 @@ function displayHand(){
 
 
 function getAvailableLetter(){
+	/** 修复字母包使用完毕 BAG_OF_LETTERS长度为0bug  I do  start */
+	if(BAG_OF_LETTERS.length == 0){
+		alert("字母使用完毕，游戏结束");
+		sumScore();
+		return ;
+	}
+	/** 字母包使用完毕  I do  end */
 	var randomIndex = Math.floor(Math.random() * BAG_OF_LETTERS.length);
 	var randomLetter = BAG_OF_LETTERS.splice(randomIndex, 1);
 	console.log(randomLetter[0]);
@@ -150,8 +157,29 @@ function getAvailableLetter(){
 
 function findWordToUse(){
  //TODO Your job starts here.
-	alert("Your code needs to go here");	
+ if (window.confirm("词库还未使用完毕,确定结束游戏?")) { 
+	sumScore();	
+  }
+	
 }
+function sumScore(){
+	var selectedWordArray = getSelectedWords();
+	alert("完成单词"+JSON.stringify(selectedWordArray)+"分数："+SCORE);
+	
+	function getSelectedWords(){
+		var selectedWords = [];
+		$("li","#word-history-list").each(function(i){
+			var text = $(this).html();
+			// 判断词库是否有该单词
+			if(isThisAWord(text)){
+				selectedWords.push(text);
+			}
+			
+		});
+		return selectedWords;
+	}
+}
+
 function humanFindWordToUse(){
 	
 	 var humanFoundWord = $( "#human-word-input").val();
