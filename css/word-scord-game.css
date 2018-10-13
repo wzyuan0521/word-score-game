@@ -2,6 +2,26 @@
 	/* column-count: 8; */
 }
 
+header>h1,p{
+	text-align: center;
+}
+table{
+	margin: auto;
+}
+#find-word-button {
+ 	text-align: center;
+    margin-left: 45%;
+}
+
+#human-word-input {
+	margin-left: 42%;
+}
+#retire-hand-button{
+	margin-left: 48%;
+}
+#word-history-list {
+	padding-left: 51%;
+}
 .letter{
 	margin-top: -28px;
     margin-left: -10px;
