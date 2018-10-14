@@ -106,6 +106,7 @@ var SCORE = 0;
 function startGame() {
 	addNumbersFromBag();
 	displayHand();
+	console.log(YOUR_HAND)
 	
 };
 
@@ -113,15 +114,19 @@ function startGame() {
 
 function addNumbersFromBag(){
 	console.log("your hand has:" + YOUR_HAND.length);
-	for(i=YOUR_HAND.length; i < 7; i++){
-		YOUR_HAND[i] = getAvailableLetter();
+	if (BAG_OF_LETTERS.length && BAG_OF_LETTERS.length >= 7) {
+		for(i=YOUR_HAND.length; i < 7; i++){
+			YOUR_HAND[i] = getAvailableLetter();
+		}
+	} else {
+		YOUR_HAND.length = 0;
 	}
-	
 }
 
 
 function displayHand(){
 	console.log("your hand has:" + YOUR_HAND.length);
+	console.log(YOUR_HAND)
 	for (i = 0; i < YOUR_HAND.length; i++) {
 
 		console.log("#letter-" + (i+1) +" set to " + YOUR_HAND[i].letter);
@@ -147,104 +152,63 @@ function getAvailableLetter(){
 	return randomLetter[0];
 }
 
+function anagrams (str) {
+  if (str.length <= 2) return str.length === 2 ? [str, str[1] + str[0], str[0], str[1]] : [str];
+  return str.split('').reduce((acc, letter, i) =>
+    acc.concat(anagrams(str.slice(0, i) + str.slice(i + 1)).map(val => letter + val)), []);
+};
+
+function countScores(str) {
+	var score = 0;
+	str.split('').map(function(letter) {
+		var letterObj = YOUR_HAND.find(function(l) {
+			return l.letter === letter;
+		});
+		score += letterObj.pointsWhenLettersUsed;
+	});
+	return score;
+}
+
 
 function findWordToUse(){
- //TODO Your job starts here.
-	var letters = []
-	var points = []
-	var l_p = []
-	var letter
-	for(var i=1;i<=7;i++){
-		var l_p_tmp = [];
-		var letter = document.getElementById("letter-"+i).innerHTML;
-		//letters.push(letter);
-		l_p_tmp.push(letter);
-		var point = parseInt(document.getElementById("points-"+i).innerHTML);
-		//points.push(point);
-		l_p_tmp.push(point);
-		l_p.push(l_p_tmp);
+// 如果剩余字母不够7 则游戏结束
+ if (YOUR_HAND.length < 7) {
+ 	alert('字母包剩余字母不够组成新单词，游戏结束！\n总得分：' + SCORE);
+ 	return;
+ }
 
-	}
-	function sequence(a,b){
-         if (a[1]>b[1]) {
-             return 1;
-         }else if(a[1]<b[1]){
-             return -1
-         }else{
-             return 0;
-         }
-    }
-    l_p.sort(sequence);
-    for(var j=0;j<7;j++){
-    	letters.push(l_p[6-j][0])
-    }
-    console.log(letters)
-    
- 	
-	function getGroup(data, index = 0, group = []) {
-		var need_apply = new Array();
-		need_apply.push(data[index]);
-		for(var i = 0; i < group.length; i++) {
-			need_apply.push(group[i] + data[index]);
-		}
-		group.push.apply(group, need_apply);
-	 
-		if(index + 1 >= data.length) return group;
-		else return getGroup(data, index + 1, group);
-	}
-	 
-	var letters_zh = getGroup(letters);
+ var letters = YOUR_HAND.map(function(item) {
+ 	return item.letter;
+ }).join('');
 
-	function permutation(arr){
-		if (arr.length == 1)
-			return arr;
-		else if (arr.length == 2)
-			return [[arr[0],arr[1]],[arr[1],arr[0]]];
-		else {
-			var temp = [];
-			for (var i = 0; i < arr.length; i++) {
-				var save = arr[i];
-				arr.splice(i, 1);
-				var res = permutation(arr);
-				arr.splice(i, 0, save);
-				for (var j = 0; j < res.length; j++) {
-					res[j].push(arr[i]);
-					temp.push(res[j]);
-				}
-			}
-			return temp;
-		}
-	}
+ // 枚举所有的组成方式
+ var maybyArray = anagrams(letters);
 
+ // 算出每一种组合的得分
+ var maybyArrayWithPoints = maybyArray.map(function(str) {
+ 	return {
+ 		str: str,
+ 		score: countScores((str))
+ 	}
+ });
 
-	var flag = false;
-	outer:
-	for(var k=0;k<letters_zh.length;k++){
-		var tmp = letters_zh[letters_zh.length-1-k];
-		var tmp1 = tmp.split("");
-		var letters_pl = permutation(tmp1);
-		inter:
-		for(var n=0;n<letters_pl.length;n++){
-			var words_tmp ="";
-			for(var m=0;m<letters_pl[n].length;m++){
-				words_tmp=words_tmp+letters_pl[n][m];
-			}
-			if(isThisAWord(words_tmp)){
-				if(haveLettersForWord(words_tmp)){
-					successfullyAddedWord(words_tmp);
-					flag = true;
-					break outer;
-				}
-				
-			}
-		}
-	}
-	if(flag){
-		alert("Found A Word!");
-	}else{
-		alert("Cannot find a word!");
-	}
+ // 按照得分从大到小的顺序排序
+ maybyArrayWithPoints.sort(function(a, b) {
+ 	return b.score - a.score;
+ });
 
+// 从所有的可能中找到得分最高的
+ var largeScoreItem = maybyArrayWithPoints.find(function(item) {
+ 	return isThisAWord(item.str);
+ });
+
+ if (largeScoreItem) {
+ 	$( "#human-word-input").val(largeScoreItem.str);
+ 	humanFindWordToUse();
+ } else {
+ 	console.log('未找到单词，继续下一个！');
+ 	retireHand();
+ }
 }
 function humanFindWordToUse(){
 	
@@ -253,6 +217,7 @@ function humanFindWordToUse(){
 	 if(isThisAWord(humanFoundWord)){
 		 if(haveLettersForWord(humanFoundWord)){
 			 successfullyAddedWord(humanFoundWord);
+			 findWordToUse();
 		 }else{
 			 alert(humanFoundWord + " - Do not have the letters for this word");
 		 }
@@ -343,12 +308,12 @@ function retireHand(){
 	YOUR_HAND = new Array();
 	addNumbersFromBag();
 	displayHand();
+	findWordToUse();
 }
 function clearClasses(){
 	for(ii=0; ii < YOUR_HAND.length; ii++){
 		$("#letter-" + (ii+1)).removeClass("letter-" + YOUR_HAND[ii].letter);
 		$("#points-" + (ii+1)).removeClass("points-" + YOUR_HAND[ii].pointsWhenLettersUsed);
-		console.log("hahahah")
 	}
 }
 
